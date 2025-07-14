@@ -18,7 +18,9 @@ use Symfony\AI\Platform\Result\ResultInterface;
 use Symfony\AI\Platform\Result\TextResult;
 use Symfony\AI\Platform\Result\ToolCall;
 use Symfony\AI\Platform\Result\ToolCallResult;
+use Symfony\AI\Platform\Result\VectorResult;
 use Symfony\AI\Platform\ResultConverterInterface;
+use Symfony\AI\Platform\Vector\Vector;
 
 /**
  * @author Christopher Hertel <mail@christopher-hertel.de>
@@ -34,6 +36,16 @@ final readonly class OllamaResultConverter implements ResultConverterInterface
     {
         $data = $result->getData();
 
+        return \array_key_exists('embeddings', $data)
+            ? $this->doConvertEmbeddings($data)
+            : $this->doConvertCompletion($data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function doConvertCompletion(array $data): ResultInterface
+    {
         if (!isset($data['message'])) {
             throw new RuntimeException('Response does not contain message.');
         }
@@ -53,5 +65,22 @@ final readonly class OllamaResultConverter implements ResultConverterInterface
         }
 
         return new TextResult($data['message']['content']);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function doConvertEmbeddings(array $data): ResultInterface
+    {
+        if ([] === $data['embeddings']) {
+            throw new RuntimeException('Response does not contain embeddings.');
+        }
+
+        return new VectorResult(
+            ...array_map(
+                static fn (array $embedding): Vector => new Vector($embedding),
+                $data['embeddings'],
+            ),
+        );
     }
 }

@@ -37,6 +37,9 @@ class Ollama extends Model
     public const QWEN = 'qwen';
     public const QWEN_2 = 'qwen2';
     public const LLAMA_2 = 'llama2';
+    public const NOMIC_EMBED_TEXT = 'nomic-embed-text';
+    public const BGE_M3 = 'bge-m3';
+    public const ALL_MINILM = 'all-minilm';
 
     private const TOOL_PATTERNS = [
         '/./' => [
@@ -51,6 +54,9 @@ class Ollama extends Model
         ],
         '/^(deepseek|mistral)/' => [
             Capability::TOOL_CALLING,
+        ],
+        '/^(nomic|bge|all-minilm).*/' => [
+            Capability::INPUT_MULTIPLE,
         ],
     ];
 

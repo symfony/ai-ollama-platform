@@ -29,6 +29,10 @@ final class PlatformFactory
     ): Platform {
         $httpClient = $httpClient instanceof EventSourceHttpClient ? $httpClient : new EventSourceHttpClient($httpClient);
 
-        return new Platform([new OllamaModelClient($httpClient, $hostUrl)], [new OllamaResultConverter()], $contract ?? OllamaContract::create());
+        return new Platform(
+            [new OllamaClient($httpClient, $hostUrl)],
+            [new OllamaResultConverter()],
+            $contract ?? OllamaContract::create()
+        );
     }
 }
