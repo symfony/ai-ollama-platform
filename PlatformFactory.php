@@ -27,8 +27,7 @@ final class PlatformFactory
         ?Contract $contract = null,
     ): Platform {
         $httpClient = $httpClient instanceof EventSourceHttpClient ? $httpClient : new EventSourceHttpClient($httpClient);
-        $handler = new LlamaModelHandler($httpClient, $hostUrl);
 
-        return new Platform([$handler], [$handler], $contract);
+        return new Platform([new LlamaModelClient($httpClient, $hostUrl)], [new LlamaResponseConverter()], $contract);
     }
 }

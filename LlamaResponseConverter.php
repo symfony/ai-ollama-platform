@@ -14,38 +14,19 @@ namespace Symfony\AI\Platform\Bridge\Ollama;
 use Symfony\AI\Platform\Bridge\Meta\Llama;
 use Symfony\AI\Platform\Exception\RuntimeException;
 use Symfony\AI\Platform\Model;
-use Symfony\AI\Platform\ModelClientInterface;
 use Symfony\AI\Platform\Response\ResponseInterface as LlmResponse;
 use Symfony\AI\Platform\Response\TextResponse;
 use Symfony\AI\Platform\ResponseConverterInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @author Christopher Hertel <mail@christopher-hertel.de>
  */
-final readonly class LlamaModelHandler implements ModelClientInterface, ResponseConverterInterface
+final readonly class LlamaResponseConverter implements ResponseConverterInterface
 {
-    public function __construct(
-        private HttpClientInterface $httpClient,
-        private string $hostUrl,
-    ) {
-    }
-
     public function supports(Model $model): bool
     {
         return $model instanceof Llama;
-    }
-
-    public function request(Model $model, array|string $payload, array $options = []): ResponseInterface
-    {
-        // Revert Ollama's default streaming behavior
-        $options['stream'] ??= false;
-
-        return $this->httpClient->request('POST', \sprintf('%s/api/chat', $this->hostUrl), [
-            'headers' => ['Content-Type' => 'application/json'],
-            'json' => array_merge($options, $payload),
-        ]);
     }
 
     public function convert(ResponseInterface $response, array $options = []): LlmResponse
