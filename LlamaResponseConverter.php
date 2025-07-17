@@ -14,10 +14,10 @@ namespace Symfony\AI\Platform\Bridge\Ollama;
 use Symfony\AI\Platform\Bridge\Meta\Llama;
 use Symfony\AI\Platform\Exception\RuntimeException;
 use Symfony\AI\Platform\Model;
-use Symfony\AI\Platform\Response\ResponseInterface as LlmResponse;
+use Symfony\AI\Platform\Response\RawResponseInterface;
+use Symfony\AI\Platform\Response\ResponseInterface;
 use Symfony\AI\Platform\Response\TextResponse;
 use Symfony\AI\Platform\ResponseConverterInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * @author Christopher Hertel <mail@christopher-hertel.de>
@@ -29,9 +29,9 @@ final readonly class LlamaResponseConverter implements ResponseConverterInterfac
         return $model instanceof Llama;
     }
 
-    public function convert(ResponseInterface $response, array $options = []): LlmResponse
+    public function convert(RawResponseInterface $response, array $options = []): ResponseInterface
     {
-        $data = $response->toArray();
+        $data = $response->getRawData();
 
         if (!isset($data['message'])) {
             throw new RuntimeException('Response does not contain message');
