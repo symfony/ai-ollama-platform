@@ -11,7 +11,6 @@
 
 namespace Symfony\AI\Platform\Bridge\Ollama;
 
-use Symfony\AI\Platform\Bridge\Meta\Llama;
 use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\ModelClientInterface;
 use Symfony\AI\Platform\Result\RawHttpResult;
@@ -20,7 +19,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * @author Christopher Hertel <mail@christopher-hertel.de>
  */
-final readonly class LlamaModelClient implements ModelClientInterface
+final readonly class OllamaModelClient implements ModelClientInterface
 {
     public function __construct(
         private HttpClientInterface $httpClient,
@@ -30,7 +29,7 @@ final readonly class LlamaModelClient implements ModelClientInterface
 
     public function supports(Model $model): bool
     {
-        return $model instanceof Llama;
+        return $model instanceof Ollama;
     }
 
     public function request(Model $model, array|string $payload, array $options = []): RawHttpResult
