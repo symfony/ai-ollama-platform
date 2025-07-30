@@ -34,11 +34,11 @@ final readonly class LlamaResultConverter implements ResultConverterInterface
         $data = $result->getData();
 
         if (!isset($data['message'])) {
-            throw new RuntimeException('Response does not contain message');
+            throw new RuntimeException('Response does not contain message.');
         }
 
         if (!isset($data['message']['content'])) {
-            throw new RuntimeException('Message does not contain content');
+            throw new RuntimeException('Message does not contain content.');
         }
 
         return new TextResult($data['message']['content']);
