@@ -41,12 +41,16 @@ final readonly class OllamaClient implements ModelClientInterface
             ],
         ]);
 
-        $modelInformationsPayload = $response->toArray();
+        $capabilities = $response->toArray()['capabilities'] ?? null;
+
+        if (null === $capabilities) {
+            throw new InvalidArgumentException('The model information could not be retrieved from the Ollama API. Your Ollama server might be too old. Try upgrade it.');
+        }
 
         return match (true) {
-            \in_array('completion', $modelInformationsPayload['capabilities'], true) => $this->doCompletionRequest($payload, $options),
-            \in_array('embedding', $modelInformationsPayload['capabilities'], true) => $this->doEmbeddingsRequest($model, $payload, $options),
-            default => throw new InvalidArgumentException(\sprintf('Unsupported model "%s".', $model::class)),
+            \in_array('completion', $capabilities, true) => $this->doCompletionRequest($payload, $options),
+            \in_array('embedding', $capabilities, true) => $this->doEmbeddingsRequest($model, $payload, $options),
+            default => throw new InvalidArgumentException(\sprintf('Unsupported model "%s": "%s".', $model::class, $model->getName())),
         };
     }
 
