@@ -45,6 +45,7 @@ class Ollama extends Model
         '/./' => [
             Capability::INPUT_MESSAGES,
             Capability::OUTPUT_TEXT,
+            Capability::OUTPUT_STRUCTURED,
         ],
         '/^llama\D*3(\D*\d+)/' => [
             Capability::TOOL_CALLING,

@@ -63,6 +63,11 @@ final readonly class OllamaClient implements ModelClientInterface
         // Revert Ollama's default streaming behavior
         $options['stream'] ??= false;
 
+        if (\array_key_exists('response_format', $options) && \array_key_exists('json_schema', $options['response_format'])) {
+            $options['format'] = $options['response_format']['json_schema']['schema'];
+            unset($options['response_format']);
+        }
+
         return new RawHttpResult($this->httpClient->request('POST', \sprintf('%s/api/chat', $this->hostUrl), [
             'headers' => ['Content-Type' => 'application/json'],
             'json' => array_merge($options, $payload),
@@ -73,7 +78,7 @@ final readonly class OllamaClient implements ModelClientInterface
      * @param array<string|int, mixed> $payload
      * @param array<string, mixed>     $options
      */
-    public function doEmbeddingsRequest(Model $model, array|string $payload, array $options = []): RawHttpResult
+    private function doEmbeddingsRequest(Model $model, array|string $payload, array $options = []): RawHttpResult
     {
         return new RawHttpResult($this->httpClient->request('POST', \sprintf('%s/api/embed', $this->hostUrl), [
             'json' => array_merge($options, [
