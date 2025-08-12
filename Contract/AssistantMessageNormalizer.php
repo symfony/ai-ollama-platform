@@ -27,16 +27,6 @@ final class AssistantMessageNormalizer extends ModelContractNormalizer implement
 {
     use NormalizerAwareTrait;
 
-    protected function supportedDataClass(): string
-    {
-        return AssistantMessage::class;
-    }
-
-    protected function supportsModel(Model $model): bool
-    {
-        return $model instanceof Ollama;
-    }
-
     /**
      * @param AssistantMessage $data
      *
@@ -68,5 +58,15 @@ final class AssistantMessageNormalizer extends ModelContractNormalizer implement
                 ];
             }, $data->toolCalls ?? [])),
         ];
+    }
+
+    protected function supportedDataClass(): string
+    {
+        return AssistantMessage::class;
+    }
+
+    protected function supportsModel(Model $model): bool
+    {
+        return $model instanceof Ollama;
     }
 }
