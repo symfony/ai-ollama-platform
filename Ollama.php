@@ -23,6 +23,7 @@ class Ollama extends Model
     public const GEMMA_3_N = 'gemma3n';
     public const GEMMA_3 = 'gemma3';
     public const QWEN_3 = 'qwen3';
+    public const QWEN_3_32B = 'qwen3:32b';
     public const QWEN_2_5_VL = 'qwen2.5vl';
     public const LLAMA_3_1 = 'llama3.1';
     public const LLAMA_3_2 = 'llama3.2';
@@ -33,6 +34,7 @@ class Ollama extends Model
     public const PHI_3 = 'phi3';
     public const GEMMA_2 = 'gemma2';
     public const QWEN_2_5_CODER = 'qwen2.5-coder';
+    public const QWEN_2_5_CODER_32B = 'qwen2.5-coder:32b';
     public const GEMMA = 'gemma';
     public const QWEN = 'qwen';
     public const QWEN_2 = 'qwen2';
@@ -50,7 +52,7 @@ class Ollama extends Model
         '/^llama\D*3(\D*\d+)/' => [
             Capability::TOOL_CALLING,
         ],
-        '/^qwen\d(\.\d)?(-coder)?$/' => [
+        '/^qwen\d(\.\d)?(-coder)?(:\d+(\.\d+)?b)?$/' => [
             Capability::TOOL_CALLING,
         ],
         '/^(deepseek|mistral)/' => [
