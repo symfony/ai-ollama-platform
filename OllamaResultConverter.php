@@ -21,6 +21,7 @@ use Symfony\AI\Platform\Result\Stream\Delta\MetadataDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\TextDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\ThinkingDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\ToolCallComplete;
+use Symfony\AI\Platform\Result\Stream\Delta\ToolCallStart;
 use Symfony\AI\Platform\Result\StreamResult;
 use Symfony\AI\Platform\Result\TextResult;
 use Symfony\AI\Platform\Result\ToolCall;
@@ -127,16 +128,25 @@ final class OllamaResultConverter implements ResultConverterInterface
                 }
             }
 
-            if ($this->streamIsToolCall($data)) {
-                $toolCalls = $this->convertStreamToToolCalls($toolCalls, $data);
-            }
-
             if ($this->hasThinkingDelta($data)) {
                 yield new ThinkingDelta($data['message']['thinking']);
             }
 
             if ($this->hasTextDelta($data)) {
                 yield new TextDelta($data['message']['content']);
+            }
+
+            // Ollama streams tool calls as complete objects in intermediate chunks; announcing them
+            // here keeps their position relative to the surrounding thinking and content
+            if ($this->streamIsToolCall($data)) {
+                foreach ($data['message']['tool_calls'] as $toolCall) {
+                    // Ollama does not identify its tool calls, and the ids are never sent back to it,
+                    // so the position in the stream serves as a stream-wide unique handle
+                    $id = (string) \count($toolCalls);
+                    $toolCalls[] = new ToolCall($id, $toolCall['function']['name'], $toolCall['function']['arguments']);
+
+                    yield new ToolCallStart($id, $toolCall['function']['name']);
+                }
             }
 
             if ([] !== $toolCalls && $this->isToolCallsStreamFinished($data)) {
@@ -158,25 +168,6 @@ final class OllamaResultConverter implements ResultConverterInterface
         if (null !== $finishReason) {
             yield new MetadataDelta('finish_reason', $finishReason);
         }
-    }
-
-    /**
-     * @param array<string, mixed> $toolCalls
-     * @param array<string, mixed> $data
-     *
-     * @return array<ToolCall>
-     */
-    private function convertStreamToToolCalls(array $toolCalls, array $data): array
-    {
-        if (!isset($data['message']['tool_calls'])) {
-            return $toolCalls;
-        }
-
-        foreach ($data['message']['tool_calls'] ?? [] as $id => $toolCall) {
-            $toolCalls[] = new ToolCall($id, $toolCall['function']['name'], $toolCall['function']['arguments']);
-        }
-
-        return $toolCalls;
     }
 
     /**

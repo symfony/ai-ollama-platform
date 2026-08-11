@@ -25,6 +25,7 @@ use Symfony\AI\Platform\Result\Stream\Delta\MetadataDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\TextDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\ThinkingDelta;
 use Symfony\AI\Platform\Result\Stream\Delta\ToolCallComplete;
+use Symfony\AI\Platform\Result\Stream\Delta\ToolCallStart;
 use Symfony\AI\Platform\Result\StreamResult;
 use Symfony\AI\Platform\Result\TextResult;
 use Symfony\AI\Platform\Result\ToolCallResult;
@@ -248,17 +249,45 @@ final class OllamaResultConverterTest extends TestCase
 
         $chunks = iterator_to_array($result->getContent());
 
-        $this->assertCount(3, $chunks);
-        $this->assertInstanceOf(ToolCallComplete::class, $chunks[0]);
-        $toolCalls = $chunks[0]->getToolCalls();
+        $this->assertCount(4, $chunks);
+        $this->assertInstanceOf(ToolCallStart::class, $chunks[0]);
+        $this->assertSame('0', $chunks[0]->getId());
+        $this->assertSame('clock', $chunks[0]->getName());
+        $this->assertInstanceOf(ToolCallComplete::class, $chunks[1]);
+        $toolCalls = $chunks[1]->getToolCalls();
         $this->assertCount(1, $toolCalls);
         $this->assertSame('clock', $toolCalls[0]->getName());
         $this->assertSame(['timezone' => 'UTC'], $toolCalls[0]->getArguments());
-        $this->assertInstanceOf(TokenUsageInterface::class, $chunks[1]);
-        $this->assertSame(11, $chunks[1]->getPromptTokens());
-        $this->assertSame(4, $chunks[1]->getCompletionTokens());
-        $this->assertInstanceOf(MetadataDelta::class, $chunks[2]);
-        $this->assertTrue($chunks[2]->getValue()->is(FinishReasonCase::STOP));
+        $this->assertInstanceOf(TokenUsageInterface::class, $chunks[2]);
+        $this->assertSame(11, $chunks[2]->getPromptTokens());
+        $this->assertSame(4, $chunks[2]->getCompletionTokens());
+        $this->assertInstanceOf(MetadataDelta::class, $chunks[3]);
+        $this->assertTrue($chunks[3]->getValue()->is(FinishReasonCase::STOP));
+    }
+
+    public function testConvertStreamingToolCallsArrivingInSeparateChunksKeepDistinctIds()
+    {
+        $converter = new OllamaResultConverter();
+        $rawResult = new InMemoryRawResult(dataStream: (static function (): iterable {
+            yield ['model' => 'llama3.2', 'message' => ['role' => 'assistant', 'content' => '', 'tool_calls' => [['function' => ['name' => 'clock', 'arguments' => ['timezone' => 'UTC']]]]], 'done' => false];
+            yield ['model' => 'llama3.2', 'message' => ['role' => 'assistant', 'content' => '', 'tool_calls' => [['function' => ['name' => 'weather', 'arguments' => ['city' => 'Berlin']]]]], 'done' => false];
+            yield ['model' => 'llama3.2', 'message' => ['role' => 'assistant', 'content' => ''], 'done' => true, 'done_reason' => 'stop'];
+        })());
+
+        $chunks = iterator_to_array($converter->convert($rawResult, options: ['stream' => true])->getContent());
+
+        $this->assertInstanceOf(ToolCallStart::class, $chunks[0]);
+        $this->assertSame('0', $chunks[0]->getId());
+        $this->assertInstanceOf(ToolCallStart::class, $chunks[1]);
+        $this->assertSame('1', $chunks[1]->getId());
+        $this->assertInstanceOf(ToolCallComplete::class, $chunks[2]);
+
+        $toolCalls = $chunks[2]->getToolCalls();
+        $this->assertCount(2, $toolCalls);
+        $this->assertSame('0', $toolCalls[0]->getId());
+        $this->assertSame('clock', $toolCalls[0]->getName());
+        $this->assertSame('1', $toolCalls[1]->getId());
+        $this->assertSame('weather', $toolCalls[1]->getName());
     }
 
     public function testConvertStreamingThrowsWhenDoneIsMissing()
