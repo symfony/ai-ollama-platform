@@ -8,6 +8,7 @@ Ollama Documentation
 
  * [API reference (chat, embed, NDJSON streaming)](https://github.com/ollama/ollama/blob/main/docs/api.md)
  * [Modelfile / capabilities](https://github.com/ollama/ollama/blob/main/docs/modelfile.mdx)
+ * [Vision (image input)](https://docs.ollama.com/capabilities/vision)
 
 Resources
 ---------
