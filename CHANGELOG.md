@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.15
+----
+
+ * Add `UserMessageNormalizer` to send image content in Ollama's native message format
+
 0.14
 ----
 
