@@ -5,6 +5,7 @@ CHANGELOG
 ----
 
  * Add `UserMessageNormalizer` to send image content in Ollama's native message format
+ * Add support for decision models (`decision` capability, Ollama >= 0.35.0), served through `POST /v1/systemone`
 
 0.14
 ----
